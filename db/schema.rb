@@ -61,7 +61,6 @@ ActiveRecord::Schema.define(version: 20140912082520) do
   add_index "admin_users", ["email"], name: "index_admin_users_on_email", unique: true, using: :btree
   add_index "admin_users", ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true, using: :btree
 
-<<<<<<< HEAD
   create_table "branches", force: true do |t|
     t.integer  "code"
     t.string   "name"
