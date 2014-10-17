@@ -1,3 +1,5 @@
+require 'orphan_importer'
+
 ActiveAdmin.register OrphanList do
 
   actions :index
@@ -54,12 +56,11 @@ ActiveAdmin.register OrphanList do
       @partner = partner
       @pending_orphan_list = PendingOrphanList.new(pending_orphan_list_params)
       @pending_orphan_list.save!
-      filename = params['pending_orphan_list']['spreadsheet'].original_filename
 
-      # This is just a place holder until the importer code is merged
-      list_valid = !(filename.include? 'empty' or filename.include? 'invalid')
+      importer = OrphanImporter.new(params['pending_orphan_list']['spreadsheet'])
+      result = importer.extract_orphans
 
-      render action: :validate, locals: { partner: @partner, orphan_list: @partner.orphan_lists.build, pending_orphan_list: @pending_orphan_list, list_valid: list_valid }
+      render action: :validate, locals: { partner: @partner, orphan_list: @partner.orphan_lists.build, pending_orphan_list: @pending_orphan_list, list_valid: importer.valid?, result: result }
     end
 
     def import
