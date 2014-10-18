@@ -27,8 +27,8 @@ div do
 
     f.actions do
       f.action :submit, label: 'Import' if list_valid
-      f.cancel_link admin_partner_pending_orphan_list_path(partner, pending_orphan_list), method: :delete
-
+      f.cancel_link admin_partner_pending_orphan_list_path(partner, pending_orphan_list), method: :delete if list_valid
+      f.cancel_link admin_partner_path(partner) unless list_valid
     end
   end
 end

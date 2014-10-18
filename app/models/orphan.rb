@@ -41,7 +41,7 @@ class Orphan < ActiveRecord::Base
   belongs_to :orphan_list
   has_one :partner, through: :orphan_list, autosave: false
 
-  delegate :province_code, to: :partner, prefix: true
+  delegate :province_code, to: :partner, prefix: true, allow_nil: true
 
   accepts_nested_attributes_for :current_address, allow_destroy: true
   accepts_nested_attributes_for :original_address, allow_destroy: true

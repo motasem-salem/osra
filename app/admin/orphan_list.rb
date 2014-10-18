@@ -55,11 +55,13 @@ ActiveAdmin.register OrphanList do
                   alert: "Partner is not Active. Orphan List cannot be uploaded." and return unless partner.active?
       @partner = partner
       @pending_orphan_list = PendingOrphanList.new(pending_orphan_list_params)
-      @pending_orphan_list.save!
-
       importer = OrphanImporter.new(params['pending_orphan_list']['spreadsheet'])
       result = importer.extract_orphans
-
+      list_valid = importer.valid?
+      if list_valid
+        @pending_orphan_list.pending_orphans = result
+        @pending_orphan_list.save!
+      end
       render action: :validate, locals: { partner: @partner, orphan_list: @partner.orphan_lists.build, pending_orphan_list: @pending_orphan_list, list_valid: importer.valid?, result: result }
     end
 
@@ -68,6 +70,11 @@ ActiveAdmin.register OrphanList do
       @pending_orphan_list = pending_orphan_list
       @orphan_count = 0
       @orphan_list = @partner.orphan_lists.build(spreadsheet: pending_orphan_list.spreadsheet, orphan_count: @orphan_count)
+      @pending_orphan_list.pending_orphans.each do |pending_orphan|
+        orphan = pending_orphan.to_orphan
+        @orphan_list.orphans << orphan
+        orphan.save!
+      end
       @orphan_list.save!
       @pending_orphan_list.destroy
       redirect_to admin_partner_path(@partner), notice: 'Orphan List was successfully imported.'
