@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141110225312) do
+ActiveRecord::Schema.define(version: 20141110225313) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -213,6 +213,7 @@ ActiveRecord::Schema.define(version: 20141110225312) do
     t.string  "minor_siblings_count"
     t.string  "sponsored_minor_siblings_count"
     t.string  "comments"
+    t.boolean "father_alive"
   end
 
   create_table "provinces", force: true do |t|

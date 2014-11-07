@@ -14,7 +14,7 @@ class Orphan < ActiveRecord::Base
   validates :name, presence: true
   validates :father_name, presence: true
   validates :father_alive, inclusion: {in: [true, false] }, exclusion: { in: [nil]}
-  validates :father_alive, inclusion: {in: [false] }, exclusion: { in: [nil]}, if: :father_is_martyr
+  validates :father_alive, inclusion: {in: [false] }, exclusion: { in: [nil]}, if: :father_is_martyr #, error_message: 'Father can not be alive if father is martyr'
   validates :father_is_martyr, inclusion: {in: [true, false] }, exclusion: { in: [nil]}
   validates :father_is_martyr, inclusion: {in: [false] }, exclusion: { in: [nil]}, if: :father_alive
   validates :father_date_of_death, presence: true, date_not_in_future: true, unless: :father_alive
@@ -113,7 +113,7 @@ class Orphan < ActiveRecord::Base
   end
 
   def valid_date? date
-    begin 
+    begin
       Date.parse(date.to_s)
     rescue ArgumentError
       return false
@@ -123,7 +123,7 @@ class Orphan < ActiveRecord::Base
   def default_priority_to_normal
     self.priority ||= 'Normal'
   end
-  
+
 
   def set_province_code
     self.province_code = partner_province_code

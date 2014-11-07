@@ -79,13 +79,21 @@ describe Orphan, type: :model do
 
     it "if father is alive, he must not be a martyr" do
       orphan.father_alive     = true
+
+      it " he must not be a martyr" do
       expect(orphan).to allow_value(false).for :father_is_martyr
       expect(orphan).to_not allow_value(true).for :father_is_martyr
+    end
+
+    it "he must not have a date of death" do
       expect(orphan).to allow_value(nil, '').for :father_date_of_death
       expect(orphan).to_not allow_value(2.years.ago).for :father_date_of_death
     end
 
-    it "father can be alive and not a martyr" do
+end
+
+
+    it "if father is alive, he can be alive and not a martyr" do
       orphan.father_alive     = true
       orphan.father_date_of_death = nil
       orphan.father_is_martyr = false
