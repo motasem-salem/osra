@@ -74,32 +74,53 @@ describe Orphan, type: :model do
 
   it { is_expected.to have_one(:partner).through(:orphan_list).autosave(false) }
 
-  describe '#validate_father_alive' do
+  describe 'validation of father alive, martyr and date of death values' do
     let(:orphan) { create :orphan }
 
-    it "father can not be alive and a martyr at the same time" do
-      orphan.father_alive = true
-      orphan.father_is_martyr = true
-      expect(orphan).to be_invalid
+    it "if father is alive, he must not be a martyr" do
+      orphan.father_alive     = true
+      expect(orphan).to allow_value(false).for :father_is_martyr
+      expect(orphan).to_not allow_value(true).for :father_is_martyr
+      expect(orphan).to allow_value(nil, '').for :father_date_of_death
+      expect(orphan).to_not allow_value(2.years.ago).for :father_date_of_death
     end
 
-      it "father can be alive and not a martyr" do
-        orphan.father_alive = true
-        orphan.father_is_martyr = false
-        expect(orphan).to be_valid
-      end
+    it "father can be alive and not a martyr" do
+      orphan.father_alive     = true
+      orphan.father_date_of_death = nil
+      orphan.father_is_martyr = false
+      expect(orphan).to be_valid
+    end
 
-      it "father can be dead and not a martyr" do
-        orphan.father_alive = false
-        orphan.father_is_martyr = false
-        expect(orphan).to be_valid
-      end
+    it "father can be dead and not a martyr" do
+      orphan.father_alive     = false
+      orphan.father_is_martyr = false
+      expect(orphan).to be_valid
+    end
 
-      it "father can be dead and a martyr" do
-        orphan.father_alive = false
-        orphan.father_is_martyr = true
-        expect(orphan).to be_valid
-      end
+    it "father can be dead and a martyr" do
+      orphan.father_alive     = false
+      orphan.father_is_martyr = true
+      expect(orphan).to be_valid
+    end
+
+  end
+
+  describe '#fahter_date_of_death' do
+    let(:orphan) { create :orphan }
+
+    it "mandatory if father is not alive" do
+      orphan.father_alive = false
+      expect(orphan).to validate_presence_of(:father_date_of_death)
+    end
+
+    it "should not be present if father is alive" do
+      orphan.father_alive = true
+      orphan.father_is_martyr = false
+      expect(orphan).to allow_value(nil, '').for :father_date_of_death
+      expect(orphan).to_not allow_value(2.years.ago).for :father_date_of_death
+    end
+
 
   end
 
@@ -213,7 +234,7 @@ describe Orphan, type: :model do
 
         context 'when orphan has no active sponsorships' do
           specify 's/he can be inactivated' do
-            expect{ orphan.update!(orphan_status: inactive_orphan_status) }.not_to raise_exception
+            expect { orphan.update!(orphan_status: inactive_orphan_status) }.not_to raise_exception
           end
         end
 
@@ -224,7 +245,7 @@ describe Orphan, type: :model do
           end
 
           specify 's/he cannot be inactivated' do
-            expect{ orphan.update!(orphan_status: inactive_orphan_status) }.to raise_error ActiveRecord::RecordInvalid
+            expect { orphan.update!(orphan_status: inactive_orphan_status) }.to raise_error ActiveRecord::RecordInvalid
             expect(orphan.errors[:orphan_status]).to include 'Cannot inactivate orphan with active sponsorships'
           end
         end
@@ -233,31 +254,31 @@ describe Orphan, type: :model do
 
     describe 'methods & scopes' do
       let!(:active_unsponsored_orphan) do
-        create :orphan, orphan_status: active_orphan_status,
+        create :orphan, orphan_status:    active_orphan_status,
                orphan_sponsorship_status: unsponsored_status
       end
       let!(:active_previously_sponsored_orphan) do
-        create :orphan, orphan_status: active_orphan_status,
+        create :orphan, orphan_status:    active_orphan_status,
                orphan_sponsorship_status: previously_sponsored_status
       end
       let!(:active_on_hold_orphan) do
-        create :orphan, orphan_status: active_orphan_status,
+        create :orphan, orphan_status:    active_orphan_status,
                orphan_sponsorship_status: on_hold_sponsorship_status
       end
       let!(:on_hold_sponsored_orphan) do
-        create :orphan, orphan_status: on_hold_orphan_status,
+        create :orphan, orphan_status:    on_hold_orphan_status,
                orphan_sponsorship_status: sponsored_status
       end
       let!(:under_revision_unsponsored_orphan) do
-        create :orphan, orphan_status: under_revision_orphan_status,
+        create :orphan, orphan_status:    under_revision_orphan_status,
                orphan_sponsorship_status: unsponsored_status
       end
       let!(:inactive_unsponsored_orphan) do
-        create :orphan, orphan_status: inactive_orphan_status,
+        create :orphan, orphan_status:    inactive_orphan_status,
                orphan_sponsorship_status: unsponsored_status
       end
       let!(:active_sponsored_orphan) do
-        create :orphan, orphan_status: active_orphan_status,
+        create :orphan, orphan_status:    active_orphan_status,
                orphan_sponsorship_status: sponsored_status
       end
       let!(:high_priority_orphan) { create :orphan, priority: 'High' }
@@ -265,7 +286,7 @@ describe Orphan, type: :model do
       describe 'methods' do
 
         specify '#full_name combines name + father_name' do
-          orphan = active_unsponsored_orphan
+          orphan    = active_unsponsored_orphan
           full_name = "#{orphan.name} #{orphan.father_name}"
           expect(orphan.full_name).to eq full_name
         end
@@ -379,7 +400,7 @@ describe Orphan, type: :model do
           context 'when orphan is sponsored' do
             let(:sponsor) { create :sponsor }
             let!(:sponsorship) { create :sponsorship,
-                                        orphan:active_unsponsored_orphan,
+                                        orphan:  active_unsponsored_orphan,
                                         sponsor: sponsor }
 
             specify '#currently_sponsored? returns true' do
@@ -417,8 +438,8 @@ describe Orphan, type: :model do
 
         specify '.active.currently_unsponsored should correctly return active unsponsored orphans only' do
           expect(Orphan.active.currently_unsponsored.to_a).to match_array [active_unsponsored_orphan,
-                                                                 active_previously_sponsored_orphan,
-                                                                 high_priority_orphan]
+                                                                           active_previously_sponsored_orphan,
+                                                                           high_priority_orphan]
         end
 
         specify '.high_priority should correctly return high-priority orphans' do

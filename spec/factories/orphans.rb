@@ -6,7 +6,7 @@ FactoryGirl.define do
     father_date_of_death { 4.days.ago }
     mother_name { Faker::Name.name  }
     mother_alive { [true, false].sample }
-    father_alive { [true, false].sample }
+    father_alive { false }
     date_of_birth { 10.years.ago }
     gender { %w(Male Female).sample }
     contact_number { Faker::PhoneNumber.phone_number }

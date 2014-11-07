@@ -13,11 +13,14 @@ class Orphan < ActiveRecord::Base
 
   validates :name, presence: true
   validates :father_name, presence: true
+  validates :father_alive, inclusion: {in: [true, false] }, exclusion: { in: [nil]}
+  validates :father_alive, inclusion: {in: [false] }, exclusion: { in: [nil]}, if: :father_is_martyr
   validates :father_is_martyr, inclusion: {in: [true, false] }, exclusion: { in: [nil]}
-  validates :father_date_of_death, presence: true, date_not_in_future: true
+  validates :father_is_martyr, inclusion: {in: [false] }, exclusion: { in: [nil]}, if: :father_alive
+  validates :father_date_of_death, presence: true, date_not_in_future: true, unless: :father_alive
+  validates :father_date_of_death, absence: true, if: :father_alive
   validates :mother_name, presence: true
   validates :mother_alive, inclusion: {in: [true, false] }, exclusion: { in: [nil]}
-  validates :father_alive, inclusion: {in: [true, false] }, exclusion: { in: [nil]}
   validates :date_of_birth, presence: true, date_not_in_future: true
   validates :gender, presence: true, inclusion: {in: Settings.lookup.gender }
   validates :contact_number, presence: true
@@ -29,7 +32,6 @@ class Orphan < ActiveRecord::Base
   validates :priority, presence: true, inclusion: { in: %w(Normal High) }
   validates :orphan_sponsorship_status, presence: true
   validates :orphan_list, presence: true
-  validate :father_not_both_alive_and_martyr
   validate :orphans_dob_within_1yr_of_fathers_death
   validate :less_than_22_yo_when_joined_osra
   validate :can_be_inactivated, if: :being_inactivated?, on: :update
@@ -51,12 +53,6 @@ class Orphan < ActiveRecord::Base
 
   def full_name
     [name, father_name].join(' ')
-  end
-
-  def father_not_both_alive_and_martyr
-    return unless father_alive? && father_is_martyr?
-    errors.add(:father_alive, "father can not be both alive and a martyr")
-    errors.add(:father_is_martyr, "father can not be both alive and a martyr")
   end
 
   def orphans_dob_within_1yr_of_fathers_death
