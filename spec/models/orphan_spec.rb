@@ -74,6 +74,35 @@ describe Orphan, type: :model do
 
   it { is_expected.to have_one(:partner).through(:orphan_list).autosave(false) }
 
+  describe '#validate_father_alive' do
+    let(:orphan) { create :orphan }
+
+    it "father can not be alive and a martyr at the same time" do
+      orphan.father_alive = true
+      orphan.father_is_martyr = true
+      expect(orphan).to be_invalid
+    end
+
+      it "father can be alive and not a martyr" do
+        orphan.father_alive = true
+        orphan.father_is_martyr = false
+        expect(orphan).to be_valid
+      end
+
+      it "father can be dead and not a martyr" do
+        orphan.father_alive = false
+        orphan.father_is_martyr = false
+        expect(orphan).to be_valid
+      end
+
+      it "father can be dead and a martyr" do
+        orphan.father_alive = false
+        orphan.father_is_martyr = true
+        expect(orphan).to be_valid
+      end
+
+  end
+
   describe '#orphans_dob_within_1yr_of_fathers_death' do
     let(:orphan) { create :orphan, :father_date_of_death => (1.year + 1.day).ago }
 
